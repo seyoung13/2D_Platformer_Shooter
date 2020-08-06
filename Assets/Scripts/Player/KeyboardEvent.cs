@@ -6,11 +6,20 @@ public class KeyboardEvent : MonoBehaviour
 {
     public Rigidbody2D rigid;
     public SpriteRenderer sprite;
+    public Collider2D tilemap_collider;
 
     private float max_speed = 5.0f;
-    private float jumping_power = 15.0f;
-    private bool is_jumping = false;
+    private float jumping_power = 20.0f;
+    private bool is_jumping = true;
+    private Vector2 move_direction, gun_direction;
+    private float collider_height, collider_width;
 
+    private void Start()
+    {
+        collider_width = GetComponent<Collider2D>().bounds.size.x;
+        collider_height = GetComponent<Collider2D>().bounds.size.y;
+    }
+    
     private void Update()
     {
         InputKey();
@@ -20,65 +29,121 @@ public class KeyboardEvent : MonoBehaviour
             sprite.color = Color.green;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         Move();
     }
 
     private void InputKey()
     {
-        //좌우 이동 키를 놓았을 때 멈추기
-        if (Input.GetButtonUp("Horizontal"))
-        {
-            rigid.velocity = new Vector2(rigid.velocity.normalized.x, rigid.velocity.y);
-        }
-
         //점프
         if (Input.GetButtonDown("Jump") && !is_jumping)
         {
             is_jumping = true;
-            rigid.AddForce(Vector2.up * jumping_power, ForceMode2D.Impulse);
+            move_direction.y = jumping_power;
+            //rigid.AddForce(Vector2.up * jumping_power, ForceMode2D.Impulse);
         }
     }
 
     private void Move()
     {
-        //좌우 이동
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        rigid.AddForce(Vector2.right * horizontal * 4.0f, ForceMode2D.Impulse);
-        if (horizontal != 0 || is_jumping)
-            rigid.gravityScale = 2;
-        else if (horizontal == 0 && !is_jumping)
-            rigid.gravityScale = 0;
-
-        //최대 속도 제한
-        if (rigid.velocity.x > max_speed)
-            rigid.velocity = new Vector2(max_speed, rigid.velocity.y);
-        else if (rigid.velocity.x < -max_speed)
-            rigid.velocity = new Vector2(-max_speed, rigid.velocity.y);
-
         //모서리에 걸쳐 있을때도 착지 판정을 하도록 collider 좌우에서 ray를 쏨
-        Vector3 player_collider_leftside_pos = new Vector3(transform.position.x - GetComponent<Collider2D>().bounds.size.x/2,
+        //좌우 중앙
+        Vector3 player_leftside_mid = new Vector3(transform.position.x - collider_width / 2, 
             transform.position.y, transform.position.z);
-        Vector3 player_collider_rightside_pos = new Vector3(transform.position.x + GetComponent<Collider2D>().bounds.size.x/2,
+        Vector3 player_rightside_mid = new Vector3(transform.position.x + collider_width / 2,
             transform.position.y, transform.position.z);
+        //좌우 발
+        Vector3 player_leftside_foot = new Vector3(transform.position.x - collider_width / 2, 
+            transform.position.y - collider_height / 2, transform.position.z);
+        Vector3 player_rightside_foot = new Vector3(transform.position.x + collider_width / 2, 
+            transform.position.y - collider_height / 2, transform.position.z);
 
-        //Debug.DrawRay(player_collider_leftside, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
-        //Debug.DrawRay(player_collider_rightside, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
+        //Debug.DrawRay(player_leftside_mid, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
+        //Debug.DrawRay(player_rightside_mid, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
 
-        RaycastHit2D player_leftside_raycast = Physics2D.Raycast(player_collider_leftside_pos, Vector3.down, 1, LayerMask.GetMask("Platform"));
-        RaycastHit2D player_rightside_raycast = Physics2D.Raycast(player_collider_rightside_pos, Vector3.down, 1, LayerMask.GetMask("Platform"));
+        //Debug.DrawRay(player_leftside_mid, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
+        //Debug.DrawRay(player_rightside_mid, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
+        //Debug.DrawRay(player_leftside_foot, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
+        //Debug.DrawRay(player_rightside_foot, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
 
-        if (player_leftside_raycast.collider != null || player_rightside_raycast.collider != null)
+        //아래로 쏘는 레이
+        RaycastHit2D leftside_down_raycast = Physics2D.Raycast(
+            player_leftside_mid, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
+        RaycastHit2D rightside_down_raycast = Physics2D.Raycast(
+            player_rightside_mid, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
+
+        if (leftside_down_raycast.collider != null && rightside_down_raycast.collider != null)
         {
-            if ((player_leftside_raycast.distance < 0.95f || player_rightside_raycast.distance < 0.95f)
-                && rigid.velocity.y < 0)
+            //착지 판정
+            if ((leftside_down_raycast.distance < collider_height / 2 || 
+                rightside_down_raycast.distance < collider_height / 2)
+                && move_direction.y < 0)
+            { 
                 is_jumping = false;
+                //착지 후 바닥을 뚫을 경우 y축 위치 보정
+                transform.position = new Vector2(transform.position.x,
+                    (leftside_down_raycast.point.y + rightside_down_raycast.point.y) / 2 
+                    + collider_height / 2);
+            }
+
+           // if (leftside_down_raycast.collider != null)
+               // Debug.Log("LEFT: "+leftside_down_raycast.point.ToString());
+           // if (rightside_down_raycast.collider != null)
+                //Debug.Log("RIGHT: "+rightside_down_raycast.point.ToString());
         }
         else
-        {   //점프 키를 안누르고 떨어지는 것도 점프로 취급
-            if (rigid.velocity.y < 0)
-                is_jumping = true;
+        {
+            is_jumping = true;
         }
+
+        //좌우로 쏘는 ray
+        RaycastHit2D leftside_mid_raycast = Physics2D.Raycast(
+            player_leftside_mid, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
+        RaycastHit2D leftside_foot_raycast = Physics2D.Raycast(
+            player_leftside_foot, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
+        RaycastHit2D rightside_mid_raycast = Physics2D.Raycast(
+            player_leftside_mid, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
+        RaycastHit2D rightside_foot_raycast = Physics2D.Raycast(
+            player_leftside_foot, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
+
+        move_direction.x = Input.GetAxisRaw("Horizontal") * max_speed;
+
+        if (is_jumping)
+        {
+            if (move_direction.y > -0.5 * jumping_power)
+                move_direction.y -= 0.04f * jumping_power;
+        }
+        else if (!is_jumping)
+        {   
+            //경사 오르기
+            //좌우로 ray를 쏴서 경사각을 구함
+            if (move_direction.x > 0)
+            {
+                if (rightside_mid_raycast.collider != null)
+                    move_direction.y = rightside_mid_raycast.point.y - rightside_foot_raycast.point.y;
+                else
+                    move_direction.y = rightside_down_raycast.point.y - leftside_down_raycast.point.y;
+
+                //x축 이동이 너무 빠르면 y축 위치 보정
+                transform.position = new Vector2(transform.position.x,
+                    (leftside_down_raycast.point.y + rightside_down_raycast.point.y) / 2
+                    + collider_height / 2);
+            }
+            else if (move_direction.x < 0)
+            {   
+                if (leftside_mid_raycast.collider != null)
+                    move_direction.y = leftside_mid_raycast.point.y - leftside_foot_raycast.point.y;
+                else
+                    move_direction.y = leftside_down_raycast.point.y - rightside_down_raycast.point.y;
+
+                //x축 이동이 너무 빠르면 y축 위치 보정
+                transform.position = new Vector2(transform.position.x,
+                    (leftside_down_raycast.point.y + rightside_down_raycast.point.y) / 2
+                    + collider_height / 2);
+            }
+        }
+
+        transform.Translate(move_direction * Time.deltaTime);
     }
 }
