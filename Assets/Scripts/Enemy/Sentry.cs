@@ -5,6 +5,8 @@ using UnityEngine;
 public class Sentry : MonoBehaviour
 {
     public float patrol_distance, patrol_time;
+    public Transform player_pos;
+    public SpriteRenderer sprite;
 
     private bool is_find_player = false;
     private float collider_height, collider_width, accumulated_distance;
@@ -13,14 +15,16 @@ public class Sentry : MonoBehaviour
     private Vector3 patrol_start_point, left_chest, right_chest, left_foot, right_foot;
     private RaycastHit2D left_chest_lower_ray, right_chest_lower_ray, left_chest_ray, left_foot_ray,
         right_chest_ray, right_foot_ray;
+    private Color last_color;
 
-    private int hp = 5;
-    public int HP
-    { get { return hp; } set { hp = value; } }
+    private int hp = 50;
 
     private void Awake()
-    {
+    {   
         Invoke("Patrol", patrol_time);
+
+        last_color = sprite.color;
+
     }
 
     private void Start()
@@ -34,7 +38,45 @@ public class Sentry : MonoBehaviour
     {
         Move();
     }
+    private void MakeRay()
+        {
+            //모서리에 걸쳐 있을때도 착지 판정을 하도록 collider 좌우에서 ray를 쏨
+            //좌우 중앙
+            left_chest = new Vector3(transform.position.x - collider_width / 2,
+                transform.position.y, transform.position.z);
+            right_chest = new Vector3(transform.position.x + collider_width / 2,
+                transform.position.y, transform.position.z);
+            //좌우 발
+            left_foot = new Vector3(transform.position.x - collider_width / 2,
+                transform.position.y - collider_height / 2, transform.position.z);
+            right_foot = new Vector3(transform.position.x + collider_width / 2,
+                transform.position.y - collider_height / 2, transform.position.z);
 
+            /*
+            Debug.DrawRay(left_chest, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
+            Debug.DrawRay(right_chest, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
+
+            Debug.DrawRay(left_chest, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
+            Debug.DrawRay(right_chest, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
+            Debug.DrawRay(left_foot, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
+            Debug.DrawRay(right_foot, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
+            */
+
+            //아래로 쏘는 레이
+            left_chest_lower_ray = Physics2D.Raycast(
+                left_chest, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
+            right_chest_lower_ray = Physics2D.Raycast(
+                right_chest, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
+            //좌우로 쏘는 ray
+            left_chest_ray = Physics2D.Raycast(
+                left_chest, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
+            left_foot_ray = Physics2D.Raycast(
+                left_foot, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
+            right_chest_ray = Physics2D.Raycast(
+                left_chest, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
+            right_foot_ray = Physics2D.Raycast(
+                left_foot, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
+        }
     private void Move()
     {
         MakeRay();
@@ -101,46 +143,30 @@ public class Sentry : MonoBehaviour
 
     private void Chase()
     {
-
+        
     }
 
-    private void MakeRay()
+    private void BeDamaged(int damage)
     {
-        //모서리에 걸쳐 있을때도 착지 판정을 하도록 collider 좌우에서 ray를 쏨
-        //좌우 중앙
-        left_chest = new Vector3(transform.position.x - collider_width / 2,
-            transform.position.y, transform.position.z);
-        right_chest = new Vector3(transform.position.x + collider_width / 2,
-            transform.position.y, transform.position.z);
-        //좌우 발
-        left_foot = new Vector3(transform.position.x - collider_width / 2,
-            transform.position.y - collider_height / 2, transform.position.z);
-        right_foot = new Vector3(transform.position.x + collider_width / 2,
-            transform.position.y - collider_height / 2, transform.position.z);
+        hp -= damage;
 
-        /*
-        Debug.DrawRay(left_chest, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
-        Debug.DrawRay(right_chest, Vector3.down, new Color(1.0f, 0.0f, 0.0f));
+        Invoke("ReturnColor", 0.1f);
 
-        Debug.DrawRay(left_chest, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
-        Debug.DrawRay(right_chest, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
-        Debug.DrawRay(left_foot, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
-        Debug.DrawRay(right_foot, Vector3.right, new Color(1.0f, 0.0f, 0.0f));
-        */
-
-        //아래로 쏘는 레이
-        left_chest_lower_ray = Physics2D.Raycast(
-            left_chest, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
-        right_chest_lower_ray = Physics2D.Raycast(
-            right_chest, Vector3.down, collider_height, LayerMask.GetMask("Platform"));
-        //좌우로 쏘는 ray
-        left_chest_ray = Physics2D.Raycast(
-            left_chest, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
-        left_foot_ray = Physics2D.Raycast(
-            left_foot, Vector3.left, collider_width, LayerMask.GetMask("Platform"));
-        right_chest_ray = Physics2D.Raycast(
-            left_chest, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
-        right_foot_ray = Physics2D.Raycast(
-            left_foot, Vector3.right, collider_width, LayerMask.GetMask("Platform"));
+        if (hp <= 0)
+            gameObject.SetActive(false);
     }
+
+    private void ReturnColor()
+    {
+        sprite.color = last_color;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "PlayerBullet")
+        {
+            BeDamaged(GameObject.Find("Player").GetComponent<MouseEvent>().player_weapon.damage);
+        }
+    }
+
 }

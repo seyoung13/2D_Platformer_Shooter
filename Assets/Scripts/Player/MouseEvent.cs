@@ -2,58 +2,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Weapon
-{
-    private string name;
-    private int damage;
-    private float delay, accuracy;
-
-    public Weapon(string name, int damage, float delay, float accuracy)
-    {
-        this.name = name;
-        this.damage = damage;
-        this.delay = delay;
-        this.accuracy = accuracy;
-    }
-
-    public string GetName()
-    {
-        return name;
-    }
-    public int GetDamage()
-    {
-        return damage;
-    }
-
-    public float GetDelay()
-    {
-        return delay;
-    }
-
-    public float GetAccuracy()
-    {
-        return accuracy;
-    }
-}
-
 public class MouseEvent : MonoBehaviour
 { 
     public ObjectManager object_manager;
     public Transform player_pos;
     public Transform crosshair_pos;
+    public Weapon player_weapon;
 
-    private Weapon player_weapon;
-    private Weapon pistol;
     private GameObject bullet;
     private float curr_fire_delay;
     private Vector3 mouse_pos;
 
     private void Awake()
     {
-        curr_fire_delay = 0.2f;
-
-        pistol = new Weapon("pistol", 1, 0.2f, 0.2f);
-        player_weapon = pistol;
+        curr_fire_delay = 100.0f;
     }
 
     private void Update()
@@ -70,7 +32,7 @@ public class MouseEvent : MonoBehaviour
         //발사
         if (Input.GetMouseButton(0))
         {
-            Fire();
+           Fire();
         }
 
         //조준
@@ -81,33 +43,39 @@ public class MouseEvent : MonoBehaviour
         //조준 취소
         else
         {
-            Debug.Log("Not Aiming.");
+
         }
     }
-
+    
     private void Fire()
     {
+        
         //플레이어 무기 확인
-        switch (player_weapon.GetName())
+        switch (player_weapon.name)
         {
-            case "pistol":
-                this.bullet = GameObject.Find("pistol_bullet1");
+            case "Pistol":
+                this.bullet = GameObject.Find("pistol_bullet");
                 break;
         }
 
         if (!Input.GetMouseButton(0))
             return;
 
-        if (curr_fire_delay < player_weapon.GetDelay())
+        if (curr_fire_delay < player_weapon.delay)
             return;
 
-        float ran = Random.Range(-0.2f, 0.2f);
+        float total_x_accuracy = Random.Range(-player_weapon.accuracy, player_weapon.accuracy);
+        float total_y_accuracy = Random.Range(-player_weapon.accuracy, player_weapon.accuracy);
+
         //총알 풀링
-        GameObject bullet = object_manager.MakeObject(player_weapon.GetName());
-        bullet.transform.position = this.transform.position;
+        GameObject bullet = object_manager.MakeObject(player_weapon.name);
+        bullet.transform.position = transform.position;
         Rigidbody2D bullet_ridigbody = bullet.GetComponent<Rigidbody2D>();
-        bullet_ridigbody.AddForce(new Vector2(crosshair_pos.position.x -player_pos.position.x + ran, 
-            crosshair_pos.position.y-player_pos.position.y+ran).normalized * 20.0f, ForceMode2D.Impulse);
+        bullet_ridigbody.AddForce(new Vector2(crosshair_pos.position.x - player_pos.position.x + total_x_accuracy, 
+            crosshair_pos.position.y-player_pos.position.y+total_y_accuracy).normalized * player_weapon.velocity,
+            ForceMode2D.Impulse);
+
+        Debug.Log(player_weapon.damage);
 
         curr_fire_delay = 0;
     }
@@ -125,5 +93,10 @@ public class MouseEvent : MonoBehaviour
     private void CrosshairMove()
     {
         crosshair_pos.position = new Vector3(mouse_pos.x, mouse_pos.y, crosshair_pos.position.z);
+    }
+
+    public Weapon GetPlayerWeaponInfo()
+    {
+        return player_weapon;
     }
 }

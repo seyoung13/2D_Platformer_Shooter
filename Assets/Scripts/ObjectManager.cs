@@ -5,8 +5,10 @@ using UnityEngine;
 public class ObjectManager : MonoBehaviour
 {
     public GameObject pistol_bullet_prefab;
+    public GameObject sentry_bullet_prefab;
 
     private GameObject[] pistol_bullet;
+    private GameObject[] sentry_bullet;
 
     //오브젝트 생성할 때 사용할 빈 인스턴스
     private GameObject[] target_object;
@@ -14,6 +16,7 @@ public class ObjectManager : MonoBehaviour
     private void Awake()
     {
         pistol_bullet = new GameObject[12];
+        sentry_bullet = new GameObject[12];
 
         Generate();
     }
@@ -25,6 +28,12 @@ public class ObjectManager : MonoBehaviour
             pistol_bullet[i] = Instantiate(pistol_bullet_prefab);
             pistol_bullet[i].SetActive(false);
         }
+
+        for (int i = 0; i < sentry_bullet.Length; i++)
+        {
+            sentry_bullet[i] = Instantiate(sentry_bullet_prefab);
+            sentry_bullet[i].SetActive(false);
+        }
     }
 
     public GameObject MakeObject(string object_name)
@@ -32,8 +41,11 @@ public class ObjectManager : MonoBehaviour
 
         switch (object_name)
         {  
-            case "pistol":
+            case "Pistol":
                 target_object = pistol_bullet;
+                break;
+            case "sentry":
+                target_object = sentry_bullet;
                 break;
         }
 

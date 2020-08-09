@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class KeyboardEvent : MonoBehaviour
 {
-    public Rigidbody2D rigid;
     public SpriteRenderer sprite;
     public Collider2D tilemap_collider;
 
     private float speed = 5.0f, jumping_power = 20.0f;
     private bool is_jumping = true;
-    private Vector2 move_direction, gun_direction;
     private float collider_height, collider_width;
-
+    private Vector2 move_direction, gun_direction;
     private Vector3 left_chest, right_chest, left_foot, right_foot;
     private RaycastHit2D left_chest_lower_ray, right_chest_lower_ray, left_chest_ray, left_foot_ray,
         right_chest_ray, right_foot_ray;
+    private Color original_color;
 
     private void Start()
     {
+        original_color = sprite.color;
         collider_width = GetComponent<Collider2D>().bounds.size.x;
         collider_height = GetComponent<Collider2D>().bounds.size.y;
     }
@@ -27,9 +27,9 @@ public class KeyboardEvent : MonoBehaviour
     {
         InputKey();
         if (is_jumping)
-            sprite.color = Color.red;
-        else
             sprite.color = Color.green;
+        else
+            sprite.color = original_color;
     }
 
     private void FixedUpdate()
@@ -44,7 +44,6 @@ public class KeyboardEvent : MonoBehaviour
         {
             is_jumping = true;
             move_direction.y = jumping_power;
-            //rigid.AddForce(Vector2.up * jumping_power, ForceMode2D.Impulse);
         }
     }
 
