@@ -6,6 +6,9 @@ public class SentryBullet : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (collision.gameObject.tag == "DestroyBorder")
+            gameObject.SetActive(false);
+
         if (collision.gameObject.tag == "Player")
             gameObject.SetActive(false);
     }

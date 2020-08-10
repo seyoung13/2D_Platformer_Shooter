@@ -41,10 +41,10 @@ public class ObjectManager : MonoBehaviour
 
         switch (object_name)
         {  
-            case "Pistol":
+            case "PistolBullet":
                 target_object = pistol_bullet;
                 break;
-            case "sentry":
+            case "SentryBullet":
                 target_object = sentry_bullet;
                 break;
         }

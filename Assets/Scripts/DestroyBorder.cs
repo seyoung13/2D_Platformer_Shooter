@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class DestroyBorder : MonoBehaviour
 {
-    public Transform player_pos;
-    GameObject left, top, right, bot;
+    public Transform camera_pos;
+    private GameObject left, top, right, bot;
 
     void Start()
     {
@@ -18,10 +18,10 @@ public class DestroyBorder : MonoBehaviour
 
     void Update()
     {
-        left.transform.position = new Vector2(player_pos.transform.position.x - 22.0f, player_pos.transform.position.y);
-        right.transform.position = new Vector2(player_pos.transform.position.x + 22.0f, player_pos.transform.position.y);
+        left.transform.position = new Vector2(camera_pos.transform.position.x - 22.0f, camera_pos.transform.position.y);
+        right.transform.position = new Vector2(camera_pos.transform.position.x + 22.0f, camera_pos.transform.position.y);
 
-        top.transform.position = new Vector2(player_pos.transform.position.x, player_pos.transform.position.y + 12.0f);
-        bot.transform.position = new Vector2(player_pos.transform.position.x, player_pos.transform.position.y - 12.0f);
+        top.transform.position = new Vector2(camera_pos.transform.position.x, camera_pos.transform.position.y + 12.0f);
+        bot.transform.position = new Vector2(camera_pos.transform.position.x, camera_pos.transform.position.y - 12.0f);
     }
 }

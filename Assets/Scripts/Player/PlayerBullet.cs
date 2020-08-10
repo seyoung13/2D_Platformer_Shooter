@@ -9,7 +9,7 @@ public class PlayerBullet : MonoBehaviour
         if (collision.gameObject.tag == "DestroyBorder")
             gameObject.SetActive(false);
 
-        if (collision.gameObject.tag == "Enemy" && gameObject.name != "rifle_pistol")
+        if (collision.gameObject.tag == "Enemy" && gameObject.name != "rifle")
             gameObject.SetActive(false);
     }
 }

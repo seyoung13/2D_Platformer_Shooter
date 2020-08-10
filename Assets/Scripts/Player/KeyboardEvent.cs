@@ -5,7 +5,6 @@ using UnityEngine;
 public class KeyboardEvent : MonoBehaviour
 {
     public SpriteRenderer sprite;
-    public Collider2D tilemap_collider;
 
     private float speed = 5.0f, jumping_power = 20.0f;
     private bool is_jumping = true;

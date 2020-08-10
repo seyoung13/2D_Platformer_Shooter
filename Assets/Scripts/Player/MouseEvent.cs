@@ -23,7 +23,7 @@ public class MouseEvent : MonoBehaviour
         mouse_pos = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
         InputKey();
-        BulletDelay();
+        BulletDelayCount();
         CrosshairMove();
     }
 
@@ -49,7 +49,6 @@ public class MouseEvent : MonoBehaviour
     
     private void Fire()
     {
-        
         //플레이어 무기 확인
         switch (player_weapon.name)
         {
@@ -68,14 +67,12 @@ public class MouseEvent : MonoBehaviour
         float total_y_accuracy = Random.Range(-player_weapon.accuracy, player_weapon.accuracy);
 
         //총알 풀링
-        GameObject bullet = object_manager.MakeObject(player_weapon.name);
+        GameObject bullet = object_manager.MakeObject(player_weapon.name+"Bullet");
         bullet.transform.position = transform.position;
         Rigidbody2D bullet_ridigbody = bullet.GetComponent<Rigidbody2D>();
         bullet_ridigbody.AddForce(new Vector2(crosshair_pos.position.x - player_pos.position.x + total_x_accuracy, 
             crosshair_pos.position.y-player_pos.position.y+total_y_accuracy).normalized * player_weapon.velocity,
             ForceMode2D.Impulse);
-
-        Debug.Log(player_weapon.damage);
 
         curr_fire_delay = 0;
     }
@@ -85,7 +82,7 @@ public class MouseEvent : MonoBehaviour
         Debug.Log("Aiming.");
     }
 
-    private void BulletDelay()
+    private void BulletDelayCount()
     {
         curr_fire_delay += Time.deltaTime;
     }
