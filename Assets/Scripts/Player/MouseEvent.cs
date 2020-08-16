@@ -5,8 +5,8 @@ using UnityEngine;
 public class MouseEvent : MonoBehaviour
 { 
     public ObjectManager object_manager;
-    public Transform player_pos;
-    public Transform crosshair_pos;
+    public Transform player_transform;
+    public Transform crosshair_transform;
     public Weapon player_weapon;
 
     private GameObject bullet;
@@ -46,7 +46,7 @@ public class MouseEvent : MonoBehaviour
 
         }
     }
-    
+
     private void Fire()
     {
         //플레이어 무기 확인
@@ -70,8 +70,8 @@ public class MouseEvent : MonoBehaviour
         GameObject bullet = object_manager.MakeObject(player_weapon.name+"Bullet");
         bullet.transform.position = transform.position;
         Rigidbody2D bullet_ridigbody = bullet.GetComponent<Rigidbody2D>();
-        bullet_ridigbody.AddForce(new Vector2(crosshair_pos.position.x - player_pos.position.x + total_x_accuracy, 
-            crosshair_pos.position.y-player_pos.position.y+total_y_accuracy).normalized * player_weapon.velocity,
+        bullet_ridigbody.AddForce(new Vector2(crosshair_transform.position.x - player_transform.position.x + total_x_accuracy, 
+            crosshair_transform.position.y-player_transform.position.y+total_y_accuracy).normalized * player_weapon.velocity,
             ForceMode2D.Impulse);
 
         curr_fire_delay = 0;
@@ -89,11 +89,7 @@ public class MouseEvent : MonoBehaviour
 
     private void CrosshairMove()
     {
-        crosshair_pos.position = new Vector3(mouse_pos.x, mouse_pos.y, crosshair_pos.position.z);
+        crosshair_transform.position = new Vector3(mouse_pos.x, mouse_pos.y, crosshair_transform.position.z);
     }
 
-    public Weapon GetPlayerWeaponInfo()
-    {
-        return player_weapon;
-    }
 }

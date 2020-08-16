@@ -5,22 +5,20 @@ using UnityEngine;
 public class Sentry : MonoBehaviour
 {   
     [HideInInspector] public bool is_find_player = false;
-    //public int hp;
-    //public float speed, fire_delay, bullet_velocu
+    public int hp;
     public float patrol_distance, patrol_time, chase_time;
-    public Transform player_pos;
+    public Transform player_transform;
     public SpriteRenderer sprite;
-    
+    public Weapon sentry_gun;
     public ObjectManager object_manager;
 
-    private int hp = 100;
     private float collider_height, collider_width;
-    private float last_direction_x = 1.0f, speed = 2.0f, fire_delay = 4.0f, curr_fire_delay = 100.0f;
+    private float last_direction_x = 1.0f, speed = 2.0f, curr_fire_delay = 100.0f;
     private Vector2 move_direction = new Vector2(1.0f, 0.0f);
     private Vector3 patrol_start_point, left_chest, right_chest, left_foot, right_foot;
     private RaycastHit2D left_chest_lower_ray, right_chest_lower_ray, left_chest_ray, left_foot_ray,
         right_chest_ray, right_foot_ray;
-    private Color last_color;
+    private Color original_color;
     private GameObject vision;
     
 
@@ -28,7 +26,7 @@ public class Sentry : MonoBehaviour
     {   
         Invoke("Patrol", patrol_time);
 
-        last_color = sprite.color;
+        original_color = sprite.color;
     }
 
     private void Start()
@@ -42,16 +40,18 @@ public class Sentry : MonoBehaviour
 
     private void Update()
     {
+        last_direction_x = move_direction.x;
         BulletDelayCount();
 
-        if (is_find_player && curr_fire_delay > fire_delay)
+        if (is_find_player && curr_fire_delay > sentry_gun.delay)
             Fire();
     }
 
     private void FixedUpdate()
-    {
+    {   
         Move();
     }
+
     private void MakeRay()
     {
         //모서리에 걸쳐 있을때도 착지 판정을 하도록 collider 좌우에서 ray를 쏨
@@ -112,14 +112,22 @@ public class Sentry : MonoBehaviour
 
         }
 
-        //순찰 거리 제한
-        if (System.Math.Abs(transform.position.x - patrol_start_point.x) > patrol_distance)
+        if (!is_find_player)
+        {//순찰 거리 제한
+            if (System.Math.Abs(transform.position.x - patrol_start_point.x) > patrol_distance)
+            {
+                if (transform.position.x > patrol_start_point.x)
+                    move_direction.x = -1;
+                else
+                    move_direction.x = 1;
+            }
+        }
+        else
         {
-            if (transform.position.x > patrol_start_point.x)
+            if (transform.position.x > player_transform.position.x)
                 move_direction.x = -1;
             else
                 move_direction.x = 1;
-            last_direction_x = move_direction.x;
         }
 
         //x축 이동이 너무 빠를때 y축 위치 보정
@@ -133,14 +141,21 @@ public class Sentry : MonoBehaviour
 
     private void Fire()
     {
+        move_direction.x = 0;
+
+        float total_x_accuracy = Random.Range(-sentry_gun.accuracy, sentry_gun.accuracy);
+        float total_y_accuracy = Random.Range(-sentry_gun.accuracy, sentry_gun.accuracy);
+
         GameObject bullet = object_manager.MakeObject("SentryBullet");
         bullet.transform.position = transform.position;
         Rigidbody2D bullet_ridigbody = bullet.GetComponent<Rigidbody2D>();
-        bullet_ridigbody.AddForce(new Vector2(player_pos.position.x - transform.position.x,
-            player_pos.position.y - transform.position.y).normalized * 10.0f,
+        bullet_ridigbody.AddForce(new Vector2(player_transform.position.x - transform.position.x + total_x_accuracy,
+            player_transform.position.y - transform.position.y +total_y_accuracy).normalized * sentry_gun.velocity,
             ForceMode2D.Impulse);
 
         curr_fire_delay = 0;
+
+        Invoke("Chase", 0.5f);
     }
 
     private void Patrol()
@@ -165,7 +180,7 @@ public class Sentry : MonoBehaviour
     }
 
     private void Chase()
-    {
+    {  
         if (!is_find_player)
             Invoke("Patrol", patrol_time);
         else
@@ -176,7 +191,7 @@ public class Sentry : MonoBehaviour
     {
         hp -= damage;
 
-        last_color = sprite.color;
+        original_color = sprite.color;
         sprite.color = Color.white;
         Invoke("ReturnColor", 0.05f);
 
@@ -189,7 +204,7 @@ public class Sentry : MonoBehaviour
 
     private void ReturnColor()
     {
-        sprite.color = last_color;
+        sprite.color = original_color;
     }
 
     private void BulletDelayCount()

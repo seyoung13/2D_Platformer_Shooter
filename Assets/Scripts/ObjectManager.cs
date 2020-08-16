@@ -16,7 +16,7 @@ public class ObjectManager : MonoBehaviour
     private void Awake()
     {
         pistol_bullet = new GameObject[12];
-        sentry_bullet = new GameObject[12];
+        sentry_bullet = new GameObject[24];
 
         Generate();
     }
