@@ -12,7 +12,7 @@ public static class Utils
         get
         {
             if (_clearConsoleMethod == null)
-            {
+            {   
                 Assembly assembly = Assembly.GetAssembly(typeof(SceneView));
                 var logEntries = assembly.GetType("UnityEditor.LogEntries");
                 _clearConsoleMethod = logEntries.GetMethod("Clear");

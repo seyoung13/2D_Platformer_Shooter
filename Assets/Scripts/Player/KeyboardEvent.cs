@@ -8,9 +8,9 @@ public class KeyboardEvent : MonoBehaviour
     public float invincible_time;
     public SpriteRenderer sprite;
 
+    private float collider_height, collider_width;
     private float run_speed, jumping_power = 10.0f;
     private bool is_jumping, is_left_blocked, is_left_descent, is_right_blocked, is_right_descent;
-    private float collider_height, collider_width;
     private Vector2 move_direction, face_direction;
     private Vector3 left_chest, right_chest, center_chest, center_foot;
     private RaycastHit2D horizontal_left_chest_ray, horizontal_left_foot_ray, horizontal_right_chest_ray, 
@@ -44,6 +44,7 @@ public class KeyboardEvent : MonoBehaviour
         MakeRay();
         DetectPlatform();
         DetectWall();
+
         Move();
     }
 
