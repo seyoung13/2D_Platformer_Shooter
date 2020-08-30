@@ -12,11 +12,13 @@ public class MouseEvent : MonoBehaviour
     private float mouse_radian, mouse_degree, mouse_radius, top_radian, bot_radian;
     private Vector2 mouse_distance, top_reticle_distance, bot_reticle_distance;
     private Vector3 mouse_pos;
+    private SoundManager sound_player;
 
     private void Start()
     {
         player = GetComponent<Player>();
         curr_fired_bullet = 0;
+        sound_player = SoundManager.sound_player;
     }
 
     private void Update()
@@ -35,7 +37,6 @@ public class MouseEvent : MonoBehaviour
 
     private void InputKey()
     {   
-        //발사
         if (Input.GetMouseButton(0))
         {
            Fire();
@@ -81,14 +82,13 @@ public class MouseEvent : MonoBehaviour
                 FireLauncher();
                 break;
         }
+        sound_player.PlaySFX(player.weapon.name);
 
         player.curr_fire_delay = 0;
     }
 
     private void FireHandgun()
     {
-        SoundManager.sound_player.PlayHandgunFire();
-
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -102,9 +102,6 @@ public class MouseEvent : MonoBehaviour
 
     private void FireMachinegun()
     {   
-        if (curr_fired_bullet == 0)
-            SoundManager.sound_player.PlayMachinegunFire();
-
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -127,8 +124,6 @@ public class MouseEvent : MonoBehaviour
 
     private void FireRifle()
     {
-        SoundManager.sound_player.PlayRifleFire();
-
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -142,8 +137,6 @@ public class MouseEvent : MonoBehaviour
 
     private void FireShotgun()
     {
-        SoundManager.sound_player.PlayShotgunFire();
-
         for (int i = 0; i < player.weapon.bullet_per_shot; i++)
         {
             Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
@@ -159,8 +152,6 @@ public class MouseEvent : MonoBehaviour
 
     private void FireLauncher()
     {
-        SoundManager.sound_player.PlayLauncherFire();
-
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 

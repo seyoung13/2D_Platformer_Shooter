@@ -2,18 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+[System.Serializable]
+public class Sound
+{
+    public string name;
+    public AudioClip clip;
+}
+
+
 public class SoundManager : MonoBehaviour
 {
     public static SoundManager sound_player;
 
-    public AudioClip handgun_fire_sound;
-    public AudioClip machinegun_fire_sound;
-    public AudioClip rifle_fire_sound;
-    public AudioClip shotgun_fire_sound;
-    public AudioClip launcher_fire_sound;
-    public AudioClip missile_explode_sound;
+    public Sound[] bgm, sfx;
 
-    private AudioSource audio_source;
+    public AudioSource bgm_player;
+    public AudioSource[] sfx_player;
 
     private void Awake()
     {   
@@ -21,38 +26,42 @@ public class SoundManager : MonoBehaviour
             sound_player = this;
     }
 
-    void Start()
+    public void PlayBGM(string bgm_name)
     {
-        audio_source = gameObject.AddComponent<AudioSource>();
+        for(int i=0; i<bgm.Length; i++)
+        {
+            if (bgm_name == bgm[i].name)
+            {
+                bgm_player.clip = bgm[i].clip;
+                bgm_player.Play();
+            }
+        }
     }
 
-    public void PlayHandgunFire()
+    public void StopBGM()
     {
-        audio_source.PlayOneShot(handgun_fire_sound);
+        bgm_player.Stop();
     }
 
-    public void PlayMachinegunFire()
+    public void PlaySFX(string sfx_name)
     {
-        audio_source.PlayOneShot(machinegun_fire_sound);
-    }
-
-    public void PlayRifleFire()
-    {
-        audio_source.PlayOneShot(rifle_fire_sound);
-    }
-
-    public void PlayShotgunFire()
-    {
-        audio_source.PlayOneShot(shotgun_fire_sound);
-    }
-
-    public void PlayLauncherFire()
-    {
-        audio_source.PlayOneShot(launcher_fire_sound);
-    }
-
-    public void PlayMissileExplode()
-    {
-        audio_source.PlayOneShot(missile_explode_sound);
+        for (int i = 0; i < sfx.Length; i++)
+        {
+            if (sfx_name == sfx[i].name)
+            {
+                for (int j = 0; j < sfx_player.Length; j++)
+                {
+                    if (!sfx_player[j].isPlaying)
+                    {
+                        sfx_player[j].clip = sfx[i].clip;
+                        sfx_player[j].Play();
+                        return;
+                    }
+                }
+                Debug.Log("모든 sfx 플레이어가 재생 중.");
+                return;
+            }
+        }
+        Debug.Log(sfx_name + "이란 이름의 sfx가 없음.");
     }
 }

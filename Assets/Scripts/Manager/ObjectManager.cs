@@ -30,9 +30,9 @@ public class ObjectManager : MonoBehaviour
     {
         handgun_bullets = new GameObject[3];
         machinegun_bullets = new GameObject[10];
-        rifle_bullets = new GameObject[1];
-        shotgun_bullets = new GameObject[8];
-        launcher_bullets = new GameObject[1];
+        rifle_bullets = new GameObject[2];
+        shotgun_bullets = new GameObject[16];
+        launcher_bullets = new GameObject[2];
 
         explosion_effects = new GameObject[6];
 

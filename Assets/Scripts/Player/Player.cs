@@ -20,6 +20,9 @@ public class Player : MonoBehaviour
 
         final_accuracy = weapon.max_accuracy/2;
         curr_fire_delay = weapon.delay;
+
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Stage1")
+            SoundManager.sound_player.PlayBGM("Stage1");
     }
 
     private void Update()
