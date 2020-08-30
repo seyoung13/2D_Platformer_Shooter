@@ -43,7 +43,7 @@ public class Sentry : MonoBehaviour
         patrol_start_point = transform.position;
         next_patrol_point.x = patrol_start_point.x - patrol_distance;
 
-        vision = transform.Find("SentryVision").gameObject;
+        vision = transform.GetChild(0).gameObject;
 
         rest_node = new LeafNode(Rest, "Rest");
         get_next_pos_node = new LeafNode(GetNextPatrolPosition, "GetNextPosition");
@@ -81,11 +81,6 @@ public class Sentry : MonoBehaviour
     {
         BulletDelayCount();
         root_node.Run();
-        Debug.Log("curr_node: " + root_node.GetName());
-        Debug.Log(is_find_player);
-        Debug.Log(curr_chase_time);
-        Debug.Log(turn_delay);
-
     }
 
     private void FixedUpdate()
@@ -344,8 +339,8 @@ public class Sentry : MonoBehaviour
 
     private NodeState Fire()
     {
-        float total_x_accuracy = Random.Range(-sentry_gun.accuracy, sentry_gun.accuracy);
-        float total_y_accuracy = Random.Range(-sentry_gun.accuracy, sentry_gun.accuracy);
+        float total_x_accuracy = Random.Range(-sentry_gun.max_accuracy, sentry_gun.max_accuracy);
+        float total_y_accuracy = Random.Range(-sentry_gun.max_accuracy, sentry_gun.max_accuracy);
 
         GameObject bullet = object_manager.MakeObject("SentryBullet");
         bullet.transform.position = transform.position;
@@ -444,7 +439,12 @@ public class Sentry : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("PlayerBullet"))
         {
-            BeDamaged(GameObject.Find("Player").GetComponent<MouseEvent>().player_weapon.damage);
+            BeDamaged(GameObject.Find("Player").GetComponent<Player>().weapon.damage);
+        }
+
+        if (collision.gameObject.CompareTag("Explosion"))
+        {
+            BeDamaged(100);
         }
     }
 

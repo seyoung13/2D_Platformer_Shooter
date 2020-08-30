@@ -55,19 +55,25 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\DestroyBorder.cs" />
     <Compile Include="Assets\Scripts\Player\MouseEvent.cs" />
     <Compile Include="Assets\Scripts\Enemy\SentryBullet.cs" />
-    <Compile Include="Assets\Scripts\Manager\SceneManager.cs" />
+    <Compile Include="Assets\Scripts\Manager\MenuManager.cs" />
+    <Compile Include="Assets\Scripts\UnitConversion.cs" />
     <Compile Include="Assets\Scripts\Manager\ObjectManager.cs" />
     <Compile Include="Assets\Scripts\Weapon.cs" />
+    <Compile Include="Assets\Scripts\Player\PlayerPenetratingBullet.cs" />
     <Compile Include="Assets\Scripts\ControlDebugConsole.cs" />
     <Compile Include="Assets\Scripts\Enemy\Sentry.cs" />
+    <Compile Include="Assets\Scripts\Player\Player.cs" />
     <Compile Include="Assets\Scripts\Player\Camera.cs" />
     <Compile Include="Assets\Scripts\Enemy\BehaviorTree.cs" />
     <Compile Include="Assets\Scripts\Player\KeyboardEvent.cs" />
-    <Compile Include="Assets\Scripts\Player\PlayerBullet.cs" />
+    <Compile Include="Assets\Scripts\Player\PlayerBasicBullet.cs" />
+    <Compile Include="Assets\Scripts\Manager\SoundManager.cs" />
     <Compile Include="Assets\Scripts\Enemy\FindEnemy.cs" />
+    <Compile Include="Assets\Scripts\Player\Explosion.cs" />
+    <Compile Include="Assets\Scripts\Player\PlayerExplosiveBullet.cs" />
+    <Compile Include="Assets\Scripts\Player\ExplosionOrigin.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

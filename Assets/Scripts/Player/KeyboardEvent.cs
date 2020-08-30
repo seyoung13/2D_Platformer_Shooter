@@ -4,24 +4,20 @@ using UnityEngine;
 
 public class KeyboardEvent : MonoBehaviour
 {
-    public int hp;
-    public float invincible_time;
-    public SpriteRenderer sprite;
+    public Weapon[] weapons;
 
+    private Player player;
     private float collider_height, collider_width;
-    private float run_speed, jumping_power = 10.0f;
-    private bool is_jumping, is_left_blocked, is_left_descent, is_right_blocked, is_right_descent;
-    private Vector2 move_direction, face_direction;
+    private Vector2 move_direction;
     private Vector3 left_chest, right_chest, center_chest, center_foot;
     private RaycastHit2D horizontal_left_chest_ray, horizontal_left_foot_ray, horizontal_right_chest_ray, 
         horizontal_right_foot_ray, vertical_left_chest_ray, vertical_right_chest_ray;
-    private Color original_color, last_color, invincible_color;
+    
 
     private void Start()
     {
-        is_jumping = true;
-        original_color = sprite.color;
-        invincible_color = Color.gray;
+        player = GetComponent<Player>();
+
         move_direction = new Vector2(0.0f, -1.0f);
         collider_width = GetComponent<Collider2D>().bounds.size.x;
         collider_height = GetComponent<Collider2D>().bounds.size.y;
@@ -30,13 +26,6 @@ public class KeyboardEvent : MonoBehaviour
     private void Update()
     {
         InputKey();
-        if (sprite.color != invincible_color)
-        {
-            if (is_jumping)
-                sprite.color = Color.green;
-            else
-                sprite.color = original_color;
-        }
     }
 
     private void FixedUpdate()
@@ -53,60 +42,62 @@ public class KeyboardEvent : MonoBehaviour
         move_direction.x = Input.GetAxisRaw("Horizontal");
 
         //점프
-        if (Input.GetButtonDown("Jump") && !is_jumping)
+        if (Input.GetButtonDown("Jump") && !player.is_jumping)
         {
             move_direction.y = 1;
-            is_jumping = true;
-            jumping_power = 10.0f;
+            player.is_jumping = true;
+            player.jumping_power = 10.0f;
             Invoke("Descent", 0.75f);
         }
+
+        SelectWeapon();
     }
     private void Move()
     {
-        if ((move_direction.x < 0 && is_left_blocked) || (move_direction.x > 0 && is_right_blocked))
+        if ((move_direction.x < 0 && player.is_left_blocked) || (move_direction.x > 0 && player.is_right_blocked))
         {
-            run_speed = 0;
+            player.run_speed = 0;
         }
         else
-            run_speed = 5.0f;
+            player.run_speed = 5.0f;
 
         float delta_x = 1, delta_y = 0;
         //이동 로직
-        if (is_jumping)
+        if (player.is_jumping)
         {
             if (move_direction.y == 0)
                 move_direction.y = -1;
 
-            if (move_direction.y > 0 && jumping_power > 0.0f)
-                jumping_power -= 0.2f;
-            else if (move_direction.y <0 && jumping_power < 10.0f)
-                jumping_power += 0.2f;
+            if (move_direction.y > 0 && player.jumping_power > 0.0f)
+                player.jumping_power -= 0.2f;
+            else if (move_direction.y <0 && player.jumping_power < 10.0f)
+                player.jumping_power += 0.2f;
         }
-        else if (!is_jumping)
+        else if (!player.is_jumping)
         {
             move_direction.y = 0;
         }
 
-        if (move_direction.x < 0 && !is_left_blocked && !is_jumping)
+        if (move_direction.x < 0 && !player.is_left_blocked && !player.is_jumping)
         {
-            if (is_left_descent)
+            if (player.is_left_descent)
                 delta_y = vertical_left_chest_ray.point.y - vertical_right_chest_ray.point.y;
             else
                 delta_y = 0;
         }
-        else if (move_direction.x > 0 && !is_right_blocked && !is_jumping)
+        else if (move_direction.x > 0 && !player.is_right_blocked && !player.is_jumping)
         {
-            if (is_right_descent)
+            if (player.is_right_descent)
                 delta_y = vertical_right_chest_ray.point.y - vertical_left_chest_ray.point.y;
             else
                 delta_y = 0;
         }
 
-        if (!is_jumping)
-            transform.Translate(new Vector3(move_direction.x * delta_x * run_speed,  delta_y * run_speed, 0.0f) *
+        if (!player.is_jumping)
+            transform.Translate(new Vector3(move_direction.x * delta_x * player.run_speed,  delta_y * player.run_speed, 0.0f) *
             Time.deltaTime);
         else
-            transform.Translate((new Vector3(move_direction.x * delta_x * run_speed, move_direction.y * jumping_power, 0.0f) *
+            transform.Translate((new Vector3(move_direction.x * delta_x * player.run_speed, move_direction.y * player.jumping_power, 0.0f) *
             Time.deltaTime));
     }
 
@@ -152,31 +143,31 @@ public class KeyboardEvent : MonoBehaviour
         {
             if (vertical_left_chest_ray.distance <= collider_height / 2 + 0.1f ||
                 vertical_right_chest_ray.distance <= collider_height / 2 + 0.1f)
-                is_jumping = false;
+                player.is_jumping = false;
             else if (vertical_left_chest_ray.distance > collider_height / 2 + 0.1f &&
                vertical_right_chest_ray.distance > collider_height / 2 + 0.1f)
-                is_jumping = true;
+                player.is_jumping = true;
             //내리막길이 60도 이하일 땐 추락 대신 걸어 내려감
             else if (Mathf.Abs(vertical_left_chest_ray.point.y - vertical_right_chest_ray.point.y) >
                     Mathf.Tan(60.0f * Mathf.PI / 180.0f))
-                is_jumping = true;
+                player.is_jumping = true;
         }
         else if (vertical_left_chest_ray.collider != null && vertical_right_chest_ray.collider == null)
         {
             if (vertical_left_chest_ray.distance <= collider_height / 2 + 0.1f)
-                is_jumping = false;
+                player.is_jumping = false;
             else if (vertical_left_chest_ray.distance > collider_height / 2 + 0.1f)
-                is_jumping = true;
+                player.is_jumping = true;
         }
         else if (vertical_left_chest_ray.collider == null && vertical_right_chest_ray.collider != null)
         {
             if (vertical_right_chest_ray.distance <= collider_height / 2 + 0.1f)
-                is_jumping = false;
+                player.is_jumping = false;
             else if (vertical_right_chest_ray.distance > collider_height / 2 + 0.1f)
-                is_jumping = true;
+                player.is_jumping = true;
         }
         else
-            is_jumping = true;
+            player.is_jumping = true;
     }
 
     private void DetectWall()
@@ -186,66 +177,66 @@ public class KeyboardEvent : MonoBehaviour
             if (horizontal_left_foot_ray.distance <= collider_width / 2 + 0.1f)
             {
                 if (horizontal_left_chest_ray.point.x - horizontal_left_foot_ray.point.x == 0)
-                    is_left_blocked = true;
+                    player.is_left_blocked = true;
                 //경사가 60 이상이면 못 올라감
                 else if (Mathf.Abs(horizontal_left_chest_ray.point.y - horizontal_left_foot_ray.point.y) /
                     Mathf.Abs(horizontal_left_chest_ray.point.x - horizontal_left_foot_ray.point.x) >=
                     Mathf.Tan(60.0f * Mathf.PI / 180.0f))
-                    is_left_blocked = true;
+                    player.is_left_blocked = true;
                 else
                 {
-                    is_left_blocked = false;
+                    player.is_left_blocked = false;
                 }
             }
             else
-                is_left_blocked = false;
+                player.is_left_blocked = false;
         }
         else if (horizontal_left_chest_ray.collider == null && horizontal_left_foot_ray.collider == null)
-            is_left_blocked = false;
+            player.is_left_blocked = false;
 
         if (horizontal_right_chest_ray.collider != null && horizontal_right_foot_ray.collider != null)
         {
             if (horizontal_right_foot_ray.distance <= collider_width / 2 + 0.1f)
             {
                 if (horizontal_right_chest_ray.point.x - horizontal_right_foot_ray.point.x == 0)
-                    is_right_blocked = true;
+                    player.is_right_blocked = true;
                 //경사가 60 이상이면 못 올라감
                 else if (Mathf.Abs(horizontal_right_chest_ray.point.y - horizontal_right_foot_ray.point.y) /
                     Mathf.Abs(horizontal_right_chest_ray.point.x - horizontal_right_foot_ray.point.x) >=
                     Mathf.Tan(60.0f * Mathf.PI / 180.0f))
-                    is_right_blocked = true;
+                    player.is_right_blocked = true;
                 else
                 {
-                    is_right_blocked = false;
+                    player.is_right_blocked = false;
                 }
             }
             else
-                is_right_blocked = false;
+                player.is_right_blocked = false;
         }
         else if (horizontal_right_chest_ray.collider == null && horizontal_right_foot_ray.collider == null)
-            is_right_blocked = false;
+            player.is_right_blocked = false;
 
-        if (is_left_blocked)
-            is_left_descent = false;
+        if (player.is_left_blocked)
+            player.is_left_descent = false;
         else
         {
             if (Mathf.Abs(vertical_left_chest_ray.point.y - vertical_right_chest_ray.point.y) >=
                     Mathf.Tan(60.0f * Mathf.PI / 180.0f))
-                is_left_descent = false;
+                player.is_left_descent = false;
             else
-                is_left_descent = true;
+                player.is_left_descent = true;
 
         }
 
-        if (is_right_blocked)
-            is_right_descent = false;
+        if (player.is_right_blocked)
+            player.is_right_descent = false;
         else
         {
             if (Mathf.Abs(vertical_left_chest_ray.point.y - vertical_right_chest_ray.point.y) >=
                     Mathf.Tan(60.0f * Mathf.PI / 180.0f))
-                is_right_descent = false;
+                player.is_right_descent = false;
             else
-                is_right_descent = true;
+                player.is_right_descent = true;
 
         }
     }
@@ -255,25 +246,46 @@ public class KeyboardEvent : MonoBehaviour
         move_direction.y = -1;
     }
 
-    public void BeDamaged(int damage)
+    private void SelectWeapon()
     {
-        hp -= damage;
-
-        last_color = sprite.color;
-        sprite.color = invincible_color;
-        gameObject.tag = "Invincible";
-        Invoke("ReturnColor", invincible_time);
-
-        if (hp <= 0)
+        //Handgun
+        if (Input.GetKeyDown(KeyCode.Alpha1) && player.weapon != weapons[0])
         {
-            gameObject.SetActive(false);
-            hp = 100;
+            player.weapon = weapons[0];
+            player.final_accuracy = weapons[0].max_accuracy/2;
+            player.curr_fire_delay = weapons[0].delay;
         }
-    }
 
-    private void ReturnColor()
-    {
-        sprite.color = last_color;
-        gameObject.tag = "Player";
+        //Machinegun
+        if (Input.GetKeyDown(KeyCode.Alpha2) && player.weapon != weapons[1])
+        {
+            player.weapon = weapons[1];
+            player.final_accuracy = weapons[1].max_accuracy / 2;
+            player.curr_fire_delay = weapons[1].delay;
+        }
+
+        //Rifle
+        if (Input.GetKeyDown(KeyCode.Alpha3) && player.weapon != weapons[2])
+        {
+            player.weapon = weapons[2];
+            player.final_accuracy = weapons[2].max_accuracy / 2;
+            player.curr_fire_delay = weapons[2].delay;
+        }
+
+        //Shotgun
+        if (Input.GetKeyDown(KeyCode.Alpha4) && player.weapon != weapons[3])
+        {
+            player.weapon = weapons[3];
+            player.final_accuracy = weapons[3].max_accuracy / 2;
+            player.curr_fire_delay = weapons[3].delay;
+        }
+
+        //Launcher
+        if (Input.GetKeyDown(KeyCode.Alpha5) && player.weapon != weapons[4])
+        {
+            player.weapon = weapons[4];
+            player.final_accuracy = weapons[4].max_accuracy / 2;
+            player.curr_fire_delay = weapons[4].delay;
+        }
     }
 }
