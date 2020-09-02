@@ -1,31 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class KeyboardEvent : MonoBehaviour
 {
     public Weapon[] weapons;
 
+    private int selected_weapon_index;
     private Player player;
-    private float collider_height, collider_width;
     private Vector2 move_direction;
     private Vector3 left_chest, right_chest, center_chest, center_foot;
-    private RaycastHit2D horizontal_left_chest_ray, horizontal_left_foot_ray, horizontal_right_chest_ray, 
+    private RaycastHit2D horizontal_left_chest_ray, horizontal_left_foot_ray, horizontal_right_chest_ray,
         horizontal_right_foot_ray, vertical_left_chest_ray, vertical_right_chest_ray;
-    
+
 
     private void Start()
     {
         player = GetComponent<Player>();
 
         move_direction = new Vector2(0.0f, -1.0f);
-        collider_width = GetComponent<Collider2D>().bounds.size.x;
-        collider_height = GetComponent<Collider2D>().bounds.size.y;
+
+        foreach (Weapon weapon in weapons)
+        {
+            weapon.curr_magazine = weapon.max_magazine;
+            weapon.curr_reload_time = 0.0f;
+        }
     }
-    
+
     private void Update()
     {
         InputKey();
+
+        if (player.is_switching_weapon)
+            SwitchWeapon(selected_weapon_index);
+
+        if (player.is_reloading)
+            Reload();
     }
 
     private void FixedUpdate()
@@ -35,6 +46,11 @@ public class KeyboardEvent : MonoBehaviour
         DetectWall();
 
         Move();
+
+        SwitchBarMove();
+
+        if (player.is_reloading)
+            ReloadBarMove();
     }
 
     private void InputKey()
@@ -51,6 +67,12 @@ public class KeyboardEvent : MonoBehaviour
         }
 
         SelectWeapon();
+
+        if (Input.GetKeyDown(KeyCode.R) && !player.is_reloading &&
+            player.weapon.curr_magazine < player.weapon.max_magazine)
+        {
+            player.is_reloading = true;
+        }
     }
     private void Move()
     {
@@ -70,7 +92,7 @@ public class KeyboardEvent : MonoBehaviour
 
             if (move_direction.y > 0 && player.jumping_power > 0.0f)
                 player.jumping_power -= 0.2f;
-            else if (move_direction.y <0 && player.jumping_power < 10.0f)
+            else if (move_direction.y < 0 && player.jumping_power < 10.0f)
                 player.jumping_power += 0.2f;
         }
         else if (!player.is_jumping)
@@ -94,7 +116,7 @@ public class KeyboardEvent : MonoBehaviour
         }
 
         if (!player.is_jumping)
-            transform.Translate(new Vector3(move_direction.x * delta_x * player.run_speed,  delta_y * player.run_speed, 0.0f) *
+            transform.Translate(new Vector3(move_direction.x * delta_x * player.run_speed, delta_y * player.run_speed, 0.0f) *
             Time.deltaTime);
         else
             transform.Translate((new Vector3(move_direction.x * delta_x * player.run_speed, move_direction.y * player.jumping_power, 0.0f) *
@@ -103,30 +125,30 @@ public class KeyboardEvent : MonoBehaviour
 
     private void MakeRay()
     {
-        left_chest = new Vector3(transform.position.x - collider_width / 2,
+        left_chest = new Vector3(transform.position.x - player.collider_width / 2,
             transform.position.y, transform.position.z);
-        right_chest = new Vector3(transform.position.x + collider_width / 2,
+        right_chest = new Vector3(transform.position.x + player.collider_width / 2,
             transform.position.y, transform.position.z);
         center_chest = new Vector3(transform.position.x, transform.position.y, transform.position.z);
         center_foot = new Vector3(transform.position.x,
-            transform.position.y - collider_height / 2 + 0.1f, transform.position.z);
+            transform.position.y - player.collider_height / 2 + 0.1f, transform.position.z);
 
         Debug.DrawRay(left_chest, Vector3.down, new Color(0.0f, 1.0f, 0.0f));
         Debug.DrawRay(right_chest, Vector3.down, new Color(0.0f, 1.0f, 0.0f));
 
-        vertical_left_chest_ray = Physics2D.Raycast(left_chest, 
-            Vector3.down, collider_height * 2, LayerMask.GetMask("Platform"));
-        vertical_right_chest_ray = Physics2D.Raycast(right_chest, 
-            Vector3.down, collider_height * 2, LayerMask.GetMask("Platform"));
+        vertical_left_chest_ray = Physics2D.Raycast(left_chest,
+            Vector3.down, player.collider_height * 2, LayerMask.GetMask("Platform"));
+        vertical_right_chest_ray = Physics2D.Raycast(right_chest,
+            Vector3.down, player.collider_height * 2, LayerMask.GetMask("Platform"));
 
         horizontal_left_chest_ray = Physics2D.Raycast(
-            center_chest, Vector3.left, collider_width * 2, LayerMask.GetMask("Platform"));
+            center_chest, Vector3.left, player.collider_width * 2, LayerMask.GetMask("Platform"));
         horizontal_left_foot_ray = Physics2D.Raycast(
-            center_foot, Vector3.left, collider_width * 2, LayerMask.GetMask("Platform"));
+            center_foot, Vector3.left, player.collider_width * 2, LayerMask.GetMask("Platform"));
         horizontal_right_chest_ray = Physics2D.Raycast(
-            center_chest, Vector3.right, collider_width * 2, LayerMask.GetMask("Platform"));
+            center_chest, Vector3.right, player.collider_width * 2, LayerMask.GetMask("Platform"));
         horizontal_right_foot_ray = Physics2D.Raycast(
-            center_foot, Vector3.right, collider_width * 2, LayerMask.GetMask("Platform"));
+            center_foot, Vector3.right, player.collider_width * 2, LayerMask.GetMask("Platform"));
 
         Debug.DrawRay(center_chest, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
         Debug.DrawRay(center_foot, Vector3.left, new Color(1.0f, 0.0f, 0.0f));
@@ -141,11 +163,11 @@ public class KeyboardEvent : MonoBehaviour
 
         if (vertical_left_chest_ray.collider != null && vertical_right_chest_ray.collider != null)
         {
-            if (vertical_left_chest_ray.distance <= collider_height / 2 + 0.1f ||
-                vertical_right_chest_ray.distance <= collider_height / 2 + 0.1f)
+            if (vertical_left_chest_ray.distance <= player.collider_height / 2 + 0.1f ||
+                vertical_right_chest_ray.distance <= player.collider_height / 2 + 0.1f)
                 player.is_jumping = false;
-            else if (vertical_left_chest_ray.distance > collider_height / 2 + 0.1f &&
-               vertical_right_chest_ray.distance > collider_height / 2 + 0.1f)
+            else if (vertical_left_chest_ray.distance > player.collider_height / 2 + 0.1f &&
+               vertical_right_chest_ray.distance > player.collider_height / 2 + 0.1f)
                 player.is_jumping = true;
             //내리막길이 60도 이하일 땐 추락 대신 걸어 내려감
             else if (Mathf.Abs(vertical_left_chest_ray.point.y - vertical_right_chest_ray.point.y) >
@@ -154,16 +176,16 @@ public class KeyboardEvent : MonoBehaviour
         }
         else if (vertical_left_chest_ray.collider != null && vertical_right_chest_ray.collider == null)
         {
-            if (vertical_left_chest_ray.distance <= collider_height / 2 + 0.1f)
+            if (vertical_left_chest_ray.distance <= player.collider_height / 2 + 0.1f)
                 player.is_jumping = false;
-            else if (vertical_left_chest_ray.distance > collider_height / 2 + 0.1f)
+            else if (vertical_left_chest_ray.distance > player.collider_height / 2 + 0.1f)
                 player.is_jumping = true;
         }
         else if (vertical_left_chest_ray.collider == null && vertical_right_chest_ray.collider != null)
         {
-            if (vertical_right_chest_ray.distance <= collider_height / 2 + 0.1f)
+            if (vertical_right_chest_ray.distance <= player.collider_height / 2 + 0.1f)
                 player.is_jumping = false;
-            else if (vertical_right_chest_ray.distance > collider_height / 2 + 0.1f)
+            else if (vertical_right_chest_ray.distance > player.collider_height / 2 + 0.1f)
                 player.is_jumping = true;
         }
         else
@@ -174,7 +196,7 @@ public class KeyboardEvent : MonoBehaviour
     {
         if (horizontal_left_chest_ray.collider != null && horizontal_left_foot_ray.collider != null)
         {
-            if (horizontal_left_foot_ray.distance <= collider_width / 2 + 0.1f)
+            if (horizontal_left_foot_ray.distance <= player.collider_width / 2 + 0.1f)
             {
                 if (horizontal_left_chest_ray.point.x - horizontal_left_foot_ray.point.x == 0)
                     player.is_left_blocked = true;
@@ -196,7 +218,7 @@ public class KeyboardEvent : MonoBehaviour
 
         if (horizontal_right_chest_ray.collider != null && horizontal_right_foot_ray.collider != null)
         {
-            if (horizontal_right_foot_ray.distance <= collider_width / 2 + 0.1f)
+            if (horizontal_right_foot_ray.distance <= player.collider_width / 2 + 0.1f)
             {
                 if (horizontal_right_chest_ray.point.x - horizontal_right_foot_ray.point.x == 0)
                     player.is_right_blocked = true;
@@ -246,46 +268,112 @@ public class KeyboardEvent : MonoBehaviour
         move_direction.y = -1;
     }
 
+    private void Reload()
+    {
+        if (!player.curr_reload_bar.activeSelf)
+        {
+            player.curr_reload_bar.SetActive(true);
+            player.max_reload_bar.SetActive(true);
+        }
+
+        if (player.is_switching_weapon)
+        {
+            player.is_reloading = false;
+            player.curr_reload_bar.SetActive(false);
+            player.max_reload_bar.SetActive(false);
+
+            player.weapon.curr_reload_time = 0;
+            return;
+        }
+
+        if (player.weapon.curr_reload_time >= player.weapon.max_reload_time)
+        {
+            player.is_reloading = false;
+            player.curr_reload_bar.SetActive(false);
+            player.max_reload_bar.SetActive(false);
+
+            player.weapon.curr_magazine = player.weapon.max_magazine;
+            player.weapon.curr_reload_time = 0;
+            return;
+        }
+
+        player.weapon.curr_reload_time += Time.deltaTime;
+        player.curr_reload_bar.GetComponent<Image>().fillAmount =
+            player.weapon.curr_reload_time / player.weapon.max_reload_time;
+    }
+
+    private void ReloadBarMove()
+    {
+        player.curr_reload_bar.transform.position = UnityEngine.Camera.main.WorldToScreenPoint(player.transform.position +
+            new Vector3(0, player.collider_height / 2 + 0.2f, 0));
+        player.max_reload_bar.transform.position = player.curr_reload_bar.transform.position;
+    }
+
     private void SelectWeapon()
     {
         //Handgun
-        if (Input.GetKeyDown(KeyCode.Alpha1) && player.weapon != weapons[0])
+        if (Input.GetKeyDown(KeyCode.Alpha1) && selected_weapon_index != 0)
         {
-            player.weapon = weapons[0];
-            player.final_accuracy = weapons[0].max_accuracy/2;
-            player.curr_fire_delay = weapons[0].delay;
+            selected_weapon_index = 0;
+            player.curr_weapon_switch_time = 0;
+            player.is_switching_weapon = true;
         }
 
         //Machinegun
-        if (Input.GetKeyDown(KeyCode.Alpha2) && player.weapon != weapons[1])
+        if (Input.GetKeyDown(KeyCode.Alpha2) && selected_weapon_index != 1)
         {
-            player.weapon = weapons[1];
-            player.final_accuracy = weapons[1].max_accuracy / 2;
-            player.curr_fire_delay = weapons[1].delay;
+            selected_weapon_index = 1;
+            player.curr_weapon_switch_time = 0;
+            player.is_switching_weapon = true;
         }
 
         //Rifle
-        if (Input.GetKeyDown(KeyCode.Alpha3) && player.weapon != weapons[2])
+        if (Input.GetKeyDown(KeyCode.Alpha3) && selected_weapon_index != 2)
         {
-            player.weapon = weapons[2];
-            player.final_accuracy = weapons[2].max_accuracy / 2;
-            player.curr_fire_delay = weapons[2].delay;
+            selected_weapon_index = 2;
+            player.curr_weapon_switch_time = 0;
+            player.is_switching_weapon = true;
         }
 
         //Shotgun
-        if (Input.GetKeyDown(KeyCode.Alpha4) && player.weapon != weapons[3])
+        if (Input.GetKeyDown(KeyCode.Alpha4) && selected_weapon_index != 3)
         {
-            player.weapon = weapons[3];
-            player.final_accuracy = weapons[3].max_accuracy / 2;
-            player.curr_fire_delay = weapons[3].delay;
+            selected_weapon_index = 3;
+            player.curr_weapon_switch_time = 0;
+            player.is_switching_weapon = true;
         }
 
         //Launcher
-        if (Input.GetKeyDown(KeyCode.Alpha5) && player.weapon != weapons[4])
+        if (Input.GetKeyDown(KeyCode.Alpha5) && selected_weapon_index != 4)
         {
-            player.weapon = weapons[4];
-            player.final_accuracy = weapons[4].max_accuracy / 2;
-            player.curr_fire_delay = weapons[4].delay;
+            selected_weapon_index = 4;
+            player.curr_weapon_switch_time = 0;
+            player.is_switching_weapon = true;
         }
+    }
+
+    private void SwitchWeapon(int weapon_index)
+    {
+        if (player.curr_weapon_switch_time >= player.max_weapon_switch_time)
+        {
+            player.weapon = weapons[weapon_index];
+            player.final_accuracy = weapons[weapon_index].max_accuracy / 2;
+            player.curr_fire_delay = weapons[weapon_index].delay;
+            player.curr_weapon_switch_time = 0;
+
+            player.is_switching_weapon = false;
+            return;
+        }
+
+        player.curr_weapon_switch_time += Time.deltaTime;
+        player.curr_switch_bar.GetComponent<Image>().fillAmount =
+            player.curr_weapon_switch_time / player.max_weapon_switch_time;
+    }
+
+    private void SwitchBarMove()
+    {
+        player.curr_switch_bar.transform.position = 
+            UnityEngine.Camera.main.WorldToScreenPoint(player.transform.position);
+        player.max_switch_bar.transform.position = player.curr_switch_bar.transform.position;
     }
 }

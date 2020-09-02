@@ -7,9 +7,9 @@ public class MouseEvent : MonoBehaviour
     public ObjectManager object_manager;
     public Transform top_reticle_transform, bot_reticle_transform;
 
-    private int curr_fired_bullet;
     private Player player;
-    private float mouse_radian, mouse_degree, mouse_radius, top_radian, bot_radian;
+    private int curr_fired_bullet;
+    private float mouse_radian, mouse_degree, mouse_radius, top_radian, bot_radian, curr_reload_time;
     private Vector2 mouse_distance, top_reticle_distance, bot_reticle_distance;
     private Vector3 mouse_pos;
     private SoundManager sound_player;
@@ -26,6 +26,7 @@ public class MouseEvent : MonoBehaviour
         Debug.Log(player.weapon.name);
 
         InputKey();
+        
         BulletDelayCount();
         mouse_pos = UnityEngine.Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
@@ -58,11 +59,17 @@ public class MouseEvent : MonoBehaviour
 
     private void Fire()
     {
-        if (!Input.GetMouseButton(0))
+        if (player.curr_fire_delay < player.weapon.delay || player.is_reloading || player.is_switching_weapon)
             return;
 
-        if (player.curr_fire_delay < player.weapon.delay)
+        if (player.weapon.curr_magazine <= 0)
+        {
+            if (!player.is_reloading)
+            { 
+                player.is_reloading = true; 
+            }
             return;
+        }
 
         switch(player.weapon.name)
         {
@@ -89,6 +96,7 @@ public class MouseEvent : MonoBehaviour
 
     private void FireHandgun()
     {
+        player.weapon.curr_magazine -= 1;
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -101,7 +109,8 @@ public class MouseEvent : MonoBehaviour
     }
 
     private void FireMachinegun()
-    {   
+    {
+        player.weapon.curr_magazine -= 1;
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -124,6 +133,7 @@ public class MouseEvent : MonoBehaviour
 
     private void FireRifle()
     {
+        player.weapon.curr_magazine -= 1;
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
@@ -137,6 +147,7 @@ public class MouseEvent : MonoBehaviour
 
     private void FireShotgun()
     {
+        player.weapon.curr_magazine -= 1;
         for (int i = 0; i < player.weapon.bullet_per_shot; i++)
         {
             Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
@@ -152,6 +163,7 @@ public class MouseEvent : MonoBehaviour
 
     private void FireLauncher()
     {
+        player.weapon.curr_magazine -= 1;
         Vector2 bullet_spread = new Vector2(Random.Range(bot_reticle_distance.x, top_reticle_distance.x),
                Random.Range(bot_reticle_distance.y, top_reticle_distance.y));
 
